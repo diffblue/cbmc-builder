@@ -1,0 +1,5 @@
+FROM ubuntu:16.04
+
+LABEL maintainer="DiffBlue Ltd."
+
+COPY ubuntu-dist /usr/bin
