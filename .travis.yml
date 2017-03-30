@@ -1,0 +1,35 @@
+language: cpp
+
+os: linux
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  # Download dobi binary and save it in the current folder
+  - curl -L https://github.com/dnephin/dobi/releases/download/v0.9/dobi-linux >dobi
+  # Make that binary executable
+  - chmod u+x ./dobi
+  # Pull to be sure that we get all git tags
+  - git pull --depth=2000
+
+  - |
+    # If this is PR then CBMC submodule should refer to diffblue/cbmc repository
+    if [[ "${TRAVIS_PULL_REQUEST}" == "true" && \
+      $(git config --get --file=.gitmodules submodule.cbmc.url) != "https://github.com/diffblue/cbmc.git" ]]
+    then
+        echo "This is pull request. Set CBMC submodule URL to diffblue/cbmc repository."
+        echo "git config --file=.gitmodules submodule.cbmc.url https://github.com/diffblue/cbmc.git"
+        exit 1
+    fi
+
+# Build cbmc-builder and try to build & test cbmc in it. Run in parallel for
+# each distro.
+env:
+  - DISTRO="alpine"
+  - DISTRO="ubuntu"
+
+script:
+  - BUILDER_TAG=$(git describe) ./dobi ${DISTRO}-test

@@ -1,0 +1,203 @@
+#
+# dobi.yaml - resources for building and testing docker images
+#
+
+meta:
+    project: cbmc
+    default: distros
+
+#
+# Mounts
+#
+
+mount=source:
+    bind: ./cbmc/
+    path: /src/cbmc/
+
+## Alpine Mounts
+
+mount=alpine-tmp:
+    bind: ./alpine-tmp
+    path: /tmp/projects
+
+mount=alpine-dist:
+    bind: ./alpine-dist/
+    path: /dist/
+
+## Ubuntu Mounts
+
+mount=ubuntu-tmp:
+    bind: ./ubuntu-tmp
+    path: /tmp/projects
+
+mount=ubuntu-dist:
+    bind: ./ubuntu-dist/
+    path: /dist/
+
+#
+# Images
+#
+
+## Alpine Images
+
+image=alpine-builder:
+    image: diffblue/cbmc-builder
+    context: alpine/
+    dockerfile: Dockerfile
+    tags:
+      - 'alpine'
+      - 'alpine-{env.BUILDER_TAG}'
+
+image=alpine-distro:
+    image: diffblue/cbmc
+    dockerfile: alpine/Dockerfile.distro
+    depends: ["alpine-copy-binaries"]
+    description: "Build the distribution image"
+    tags:
+      - 'alpine'
+      - 'alpine-{env.BUILDER_TAG}'
+
+## Ubuntu Images
+
+image=ubuntu-builder:
+    image: diffblue/cbmc-builder
+    context: ubuntu/
+    dockerfile: Dockerfile
+    tags:
+      - 'latest'
+      - 'xenial'
+      - 'xenial-{env.BUILDER_TAG}'
+
+image=ubuntu-distro:
+    image: diffblue/cbmc
+    dockerfile: ubuntu/Dockerfile.distro
+    depends: ["ubuntu-copy-binaries"]
+    description: "Build the distribution image"
+    tags:
+      - 'latest'
+      - 'xenial'
+      - 'xenial-{env.BUILDER_TAG}'
+
+#
+# Jobs
+#
+
+## Alpine Jobs
+
+job=alpine-copy-src:
+    use: alpine-builder
+    mounts: [source, alpine-tmp]
+    artifact: alpine-tmp/cbmc
+    command: "bash -c \"cp -r /src/cbmc /tmp/projects/\""
+    description: "Copy source to temporary folder."
+
+job=alpine-prebuild:
+    use: alpine-builder
+    depends: ["alpine-copy-src"]
+    mounts: [alpine-tmp]
+    artifact: alpine-tmp/cbmc/minisat-2.2.1
+    command: "bash -c \"make -C /tmp/projects/cbmc/src minisat2-download\""
+    description: "Do make prebuild actions."
+
+job=alpine-build:
+    use: alpine-builder
+    depends: ["alpine-prebuild"]
+    mounts: [alpine-tmp]
+    artifact: alpine-tmp/cbmc/src/cbmc/cbmc
+    command: "bash -c \"make -C /tmp/projects/cbmc/src -j$(getconf _NPROCESSORS_ONLN)\""
+    description: "Do make build."
+
+job=alpine-test:
+    use: alpine-builder
+    depends: ["alpine-build"]
+    mounts: [alpine-tmp]
+    command: "bash -c \"make -C /tmp/projects/cbmc/regression test\""
+    description: "Do make tests."
+
+job=alpine-copy-binaries:
+    use: alpine-builder
+    depends: ["alpine-build"]
+    mounts: [alpine-tmp, alpine-dist]
+    artifact: alpine-dist/bin
+    command: "bash -c \"mkdir -p /dist/bin && cp -r /tmp/projects/cbmc/src/cbmc/cbmc /dist/bin/ && cp -r /tmp/projects/cbmc/src/goto-*/goto-* /dist/bin/ && rm /dist/bin/*.a\""
+    description: "Copy binaries to dist folder."
+
+job=alpine-clean:
+    use: alpine-builder
+    mounts: [alpine-tmp, alpine-dist]
+    command: "bash -c \"rm -rf /tmp/projects/* && rm -rf /dist/*\""
+    description: "Delete temporary files and binaries"
+
+## Ubuntu Jobs
+
+job=ubuntu-copy-src:
+    use: ubuntu-builder
+    mounts: [source, ubuntu-tmp]
+    artifact: ubuntu-tmp/cbmc
+    command: "bash -c \"cp -r /src/cbmc /tmp/projects/\""
+    description: "Copy source to temporary folder."
+
+job=ubuntu-prebuild:
+    use: ubuntu-builder
+    depends: ["ubuntu-copy-src"]
+    mounts: [ubuntu-tmp]
+    artifact: ubuntu-tmp/cbmc/minisat-2.2.1
+    command: "bash -c \"make -C /tmp/projects/cbmc/src minisat2-download\""
+    description: "Do make prebuild actions."
+
+job=ubuntu-build:
+    use: ubuntu-builder
+    depends: ["ubuntu-prebuild"]
+    mounts: [ubuntu-tmp]
+    artifact: ubuntu-tmp/cbmc/src/cbmc/cbmc
+    command: "bash -c \"make -C /tmp/projects/cbmc/src -j$(getconf _NPROCESSORS_ONLN)\""
+    description: "Do make build."
+
+job=ubuntu-test:
+    use: ubuntu-builder
+    depends: ["ubuntu-build"]
+    mounts: [ubuntu-tmp]
+    command: "bash -c \"make -C /tmp/projects/cbmc/regression test\""
+    description: "Do make tests."
+
+job=ubuntu-copy-binaries:
+    use: ubuntu-builder
+    depends: ["ubuntu-build"]
+    mounts: [ubuntu-tmp, ubuntu-dist]
+    artifact: ubuntu-dist/bin
+    command: "bash -c \"mkdir -p /dist/bin && cp -r /tmp/projects/cbmc/src/cbmc/cbmc /dist/bin/ && cp -r /tmp/projects/cbmc/src/goto-*/goto-* /dist/bin/ && rm /dist/bin/*.a\""
+    description: "Copy binaries to dist folder."
+
+job=ubuntu-clean:
+    use: ubuntu-builder
+    mounts: [ubuntu-tmp, ubuntu-dist]
+    command: "bash -c \"rm -rf /tmp/projects/* && rm -rf /dist/*\""
+    description: "Delete temporary files and binaries"
+
+#
+# Aliases
+#
+
+alias=alpine:
+    tasks: [alpine-copy-src, alpine-prebuild, alpine-build, alpine-test, alpine-copy-binaries]
+    description: "Run all containers and jobs for Alpine"
+
+alias=ubuntu:
+    tasks: [ubuntu-copy-src, ubuntu-prebuild, ubuntu-build, ubuntu-test, ubuntu-copy-binaries]
+    description: "Run all containers and jobs for Ubuntu"
+
+alias=test:
+    tasks: [alpine-test, ubuntu-test]
+    description: "Run all tests for all distros."
+
+alias=distros:
+    tasks: [alpine-distro, ubuntu-distro]
+    description: "Create all distro images."
+
+alias=clean:
+    tasks: [alpine-clean, ubuntu-clean]
+    description: "Delete temporary files and binaries for all distros."
+
+alias=all:
+    tasks: [alpine, ubuntu]
+    description: "Run all jobs for all distros."
