@@ -1,0 +1,17 @@
+<project name="Regression test" default="dist" basedir=".">
+  <description>
+    Simple build file
+  </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+
+  <target name="init">
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="compile" depends="init"
+        description="compile the source">
+    <javac srcdir="${src}" destdir="${build}"/>
+  </target>
+</project>
