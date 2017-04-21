@@ -28,8 +28,9 @@ before_install:
 # Build cbmc-builder and try to build & test cbmc in it. Run in parallel for
 # each distro.
 env:
-  - DISTRO="alpine"
-  - DISTRO="ubuntu"
+  - IMAGE="alpine"
+  - IMAGE="ubuntu"
+  - IMAGE="alpine-diffblue-builder"
 
 script:
-  - BUILDER_TAG=$(git describe) ./dobi ${DISTRO}-test
+  - BUILDER_TAG=$(git describe) ./dobi ${IMAGE}-test

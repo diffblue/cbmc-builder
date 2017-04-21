@@ -14,6 +14,10 @@ mount=source:
     bind: ./cbmc/
     path: /src/cbmc/
 
+mount=test-java:
+    bind: ./test/java/
+    path: /test-java/
+
 ## Alpine Mounts
 
 mount=alpine-tmp:
@@ -53,6 +57,13 @@ image=alpine-distro:
     dockerfile: alpine/Dockerfile.distro
     depends: ["alpine-copy-binaries"]
     description: "Build the distribution image"
+    tags:
+      - 'alpine'
+      - 'alpine-{env.BUILDER_TAG}'
+
+image=alpine-diffblue-builder:
+    image: diffblue/diffblue-builder
+    dockerfile: alpine/Dockerfile.diffblue-builder
     tags:
       - 'alpine'
       - 'alpine-{env.BUILDER_TAG}'
@@ -127,6 +138,12 @@ job=alpine-clean:
     mounts: [alpine-tmp, alpine-dist]
     command: "bash -c \"rm -rf /tmp/projects/* && rm -rf /dist/*\""
     description: "Delete temporary files and binaries"
+
+job=alpine-diffblue-builder-test:
+    use: alpine-diffblue-builder
+    mounts: [test-java]
+    command: "bash -c \"cd /test-java && mvn compile && ant compile\""
+    description: "Test basic funcionality"
 
 ## Ubuntu Jobs
 
