@@ -1,4 +1,4 @@
-FROM diffblue/cbmc-builder:alpine-0.0.1
+FROM diffblue/cbmc-builder:alpine-0.0.2
 
 LABEL maintainer="DiffBlue Ltd."
 
