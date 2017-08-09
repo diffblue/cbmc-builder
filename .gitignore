@@ -3,3 +3,5 @@ alpine-dist
 alpine-tmp
 ubuntu-dist
 ubuntu-tmp
+test/java/build
+test/java/target
