@@ -49,8 +49,8 @@ image=alpine-builder:
     context: alpine/
     dockerfile: Dockerfile
     tags:
-      - 'alpine'
       - 'alpine-{env.BUILDER_TAG}'
+      - 'alpine'
 
 image=alpine-distro:
     image: diffblue/cbmc
@@ -58,15 +58,15 @@ image=alpine-distro:
     depends: ["alpine-copy-binaries"]
     description: "Build the distribution image"
     tags:
-      - 'alpine'
       - 'alpine-{env.BUILDER_TAG}'
+      - 'alpine'
 
 image=alpine-diffblue-builder:
     image: diffblue/diffblue-builder
     dockerfile: alpine/Dockerfile.diffblue-builder
     tags:
-      - 'alpine'
       - 'alpine-{env.BUILDER_TAG}'
+      - 'alpine'
 
 ## Ubuntu Images
 
@@ -75,9 +75,9 @@ image=ubuntu-builder:
     context: ubuntu/
     dockerfile: Dockerfile
     tags:
+      - 'xenial-{env.BUILDER_TAG}'
       - 'latest'
       - 'xenial'
-      - 'xenial-{env.BUILDER_TAG}'
 
 image=ubuntu-distro:
     image: diffblue/cbmc
@@ -85,10 +85,10 @@ image=ubuntu-distro:
     depends: ["ubuntu-copy-binaries"]
     description: "Build the distribution image"
     tags:
+
+      - 'xenial-{env.BUILDER_TAG}'
       - 'latest'
       - 'xenial'
-      - 'xenial-{env.BUILDER_TAG}'
-
 #
 # Jobs
 #
