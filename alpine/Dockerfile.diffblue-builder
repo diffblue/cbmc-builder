@@ -6,7 +6,8 @@ RUN apk add --no-cache \
       openjdk8 \
       jq \
       maven \
-      apache-ant
+      apache-ant \
+      python
 
 ENV PATH="$PATH:/usr/lib/jvm/java-1.8-openjdk/jre/bin:/usr/lib/jvm/java-1.8-openjdk/bin" \
     JAVA_HOME="/usr/lib/jvm/java-1.8-openjdk"
